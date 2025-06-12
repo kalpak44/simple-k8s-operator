@@ -25,17 +25,17 @@ import (
 
 // BackupSpec defines the desired state of Backup.
 type BackupSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Database — имя базы, которую надо бэкапить
+	Database string `json:"database"`
 
-	// Foo is an example field of Backup. Edit backup_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Schedule — cron-выражение для запуска бэкапа
+	Schedule string `json:"schedule"`
 }
 
 // BackupStatus defines the observed state of Backup.
 type BackupStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// LastBackup — временная метка последнего успешного запуска
+	LastBackup metav1.Time `json:"lastBackup,omitempty"`
 }
 
 // +kubebuilder:object:root=true

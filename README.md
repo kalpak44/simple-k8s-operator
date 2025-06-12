@@ -21,3 +21,20 @@ simple-k8s-operator % operator-sdk create api \
 ```
 
 
+3. Update Backup CRD spec and status
+
+```go
+// BackupSpec defines the desired state of Backup.
+type BackupSpec struct {
+    // Database
+    Database string `json:"database"`
+
+    // Schedule — cron-expression
+    Schedule string `json:"schedule"`
+}
+```
+
+```shell
+make generate   # пересобирает deepcopy-методы и openAPI-схему
+make manifests  # генерирует CRD-манифесты на основе ваших правок
+```
