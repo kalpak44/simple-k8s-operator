@@ -18,11 +18,16 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	homev1 "github.com/kalpak44/simple-k8s-operator/api/v1"
 )
@@ -39,17 +44,59 @@ type BackupReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Backup object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.4/pkg/reconcile
 func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	// 1) Получаем объект Backup
+	var bkp homev1.Backup
+	if err := r.Get(ctx, req.NamespacedName, &bkp); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// 2) Формируем желаемый CronJob
+	cron := &batchv1.CronJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      bkp.Name + "-cron",
+			Namespace: bkp.Namespace,
+		},
+		Spec: batchv1.CronJobSpec{
+			Schedule: bkp.Spec.Schedule,
+			JobTemplate: batchv1.JobTemplateSpec{
+				Spec: batchv1.JobSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{{
+								Name:  "backup",
+								Image: "curlimages/curl:latest",
+								Args: []string{
+									"-s",
+									"-X", "POST",
+									"https://kalpak44.free.beeceptor.com",
+									"-d", fmt.Sprintf("db=%s", bkp.Spec.Database),
+								},
+							}},
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// 3) Устанавливаем владельца для автоматической уборки
+	if err := controllerutil.SetControllerReference(&bkp, cron, r.Scheme); err != nil {
+		logger.Error(err, "unable to set owner reference on CronJob")
+		return ctrl.Result{}, err
+	}
+
+	// 4) Создаём или обновляем CronJob в кластере
+	if _, err := controllerutil.CreateOrUpdate(ctx, r.Client, cron, func() error {
+		// здесь можно добавить логику обновления spec, если нужно
+		return nil
+	}); err != nil {
+		logger.Error(err, "failed to create or update CronJob")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
