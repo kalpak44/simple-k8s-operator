@@ -8,25 +8,26 @@ rules:
   - home.home.com
   resources:
   - backups
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - home.home.com
-  resources:
-  - backups/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - home.home.com
-  resources:
   - backups/status
   verbs:
   - get
-  - patch
+  - list
+  - watch
+  - create
   - update
+  - patch
+  - delete
+
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+

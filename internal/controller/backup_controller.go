@@ -32,7 +32,10 @@ import (
 	homev1 "github.com/kalpak44/simple-k8s-operator/api/v1"
 )
 
-// BackupReconciler reconciles a Backup object
+// +kubebuilder:rbac:groups=home.home.com,resources=backups,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=home.home.com,resources=backups/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=home.home.com,resources=backups/finalizers,verbs=update
+// +kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 type BackupReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -41,9 +44,6 @@ type BackupReconciler struct {
 // +kubebuilder:rbac:groups=home.home.com,resources=backups,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=home.home.com,resources=backups/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=home.home.com,resources=backups/finalizers,verbs=update
-
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
 func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
