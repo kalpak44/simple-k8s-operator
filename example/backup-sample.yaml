@@ -1,0 +1,8 @@
+apiVersion: home.home.com/v1
+kind: Backup
+metadata:
+  name: demo-backup
+  namespace: default
+spec:
+  database: "postgres-db"
+  schedule: "*/1 * * * *" # Every minute
