@@ -43,17 +43,20 @@ var _ = Describe("Backup Controller", func() {
 	})
 
 	AfterEach(func() {
-		// Clean up Backup and corresponding CronJob
+		// Clean up Backup
 		Expect(k8sClient.Delete(ctx, backup)).To(Succeed())
 
-		// Wait until CronJob disappears
+		// Try to clean up the CronJob explicitly, since envtest GC may not be immediate
 		cron := &batchv1.CronJob{}
-		Eventually(func() error {
-			return k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: namespacedName.Namespace,
-				Name:      namespacedName.Name + "-cron",
-			}, cron)
-		}, "5s", "500ms").Should(HaveOccurred())
+		err := k8sClient.Get(ctx, types.NamespacedName{
+			Namespace: namespacedName.Namespace,
+			Name:      namespacedName.Name + "-cron",
+		}, cron)
+		if err == nil {
+			_ = k8sClient.Delete(ctx, cron) // ignore error, as it may already be gone
+		}
+		// Note: In envtest, garbage collection of dependents is not always immediate or guaranteed.
+		// So we do not fail the test if the CronJob still exists after deleting the Backup.
 	})
 
 	It("should create a CronJob with correct spec and ownerReference", func() {
