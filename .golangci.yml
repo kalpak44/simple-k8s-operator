@@ -1,5 +1,3 @@
-version: "2"
-
 run:
   timeout: 5m
   allow-parallel-runners: true
@@ -38,8 +36,3 @@ linters:
         linters:
           - dupl
           - lll
-
-formatters:
-  enable:
-    - gofmt
-    - goimports
