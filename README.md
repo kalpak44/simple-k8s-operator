@@ -87,5 +87,3 @@ Apply the example:
 ```bash
 kubectl apply -f backup-sample.yaml
 ```
-
-mvn versions:update-parent versions:update-properties versions:use-latest-versions -Dincludes="*" -DgenerateBackupPoms=false
