@@ -25,16 +25,16 @@ import (
 
 // BackupSpec defines the desired state of Backup.
 type BackupSpec struct {
-	// Database — имя базы, которую надо бэкапить
+	// Database — the name of the database to back up
 	Database string `json:"database"`
 
-	// Schedule — cron-выражение для запуска бэкапа
+	// Schedule — cron expression for backup schedule
 	Schedule string `json:"schedule"`
 }
 
 // BackupStatus defines the observed state of Backup.
 type BackupStatus struct {
-	// LastBackup — временная метка последнего успешного запуска
+	// LastBackup — timestamp of the last successful backup
 	LastBackup metav1.Time `json:"lastBackup,omitempty"`
 }
 

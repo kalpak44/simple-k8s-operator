@@ -28,7 +28,7 @@ var _ = Describe("Backup Controller", func() {
 			Name:      "feature-test",
 		}
 
-		// Создаём Backup-ресурс
+		// Create Backup resource
 		backup = &homev1.Backup{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      namespacedName.Name,
@@ -43,10 +43,10 @@ var _ = Describe("Backup Controller", func() {
 	})
 
 	AfterEach(func() {
-		// Чистим Backup и соответствующий CronJob
+		// Clean up Backup and corresponding CronJob
 		Expect(k8sClient.Delete(ctx, backup)).To(Succeed())
 
-		// Ждём, пока CronJob исчезнет
+		// Wait until CronJob disappears
 		cron := &batchv1.CronJob{}
 		Eventually(func() error {
 			return k8sClient.Get(ctx, types.NamespacedName{
@@ -57,7 +57,7 @@ var _ = Describe("Backup Controller", func() {
 	})
 
 	It("should create a CronJob with correct spec and ownerReference", func() {
-		// Вызываем Reconcile
+		// Call Reconcile
 		reconciler := &BackupReconciler{
 			Client: k8sClient,
 			Scheme: k8sClient.Scheme(),
@@ -65,17 +65,15 @@ var _ = Describe("Backup Controller", func() {
 		_, err := reconciler.Reconcile(ctx, ctrl.Request{NamespacedName: namespacedName})
 		Expect(err).NotTo(HaveOccurred())
 
-		// Проверяем, что CronJob появился
+		// 1) Schedule matches
 		cron := &batchv1.CronJob{}
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
 			Namespace: namespacedName.Namespace,
 			Name:      namespacedName.Name + "-cron",
 		}, cron)).To(Succeed())
-
-		// 1) Schedule совпадает
 		Expect(cron.Spec.Schedule).To(Equal(backup.Spec.Schedule))
 
-		// 2) Container с curl и правильными аргументами
+		// 2) Container with curl and correct arguments
 		containers := cron.Spec.JobTemplate.Spec.Template.Spec.Containers
 		Expect(containers).To(HaveLen(1))
 		c := containers[0]
@@ -87,7 +85,7 @@ var _ = Describe("Backup Controller", func() {
 			fmt.Sprintf("db=%s", backup.Spec.Database),
 		))
 
-		// 3) OwnerReference указывает на Backup
+		// 3) OwnerReference points to Backup
 		Expect(len(cron.OwnerReferences)).To(Equal(1))
 		or := cron.OwnerReferences[0]
 		Expect(or.Kind).To(Equal("Backup"))

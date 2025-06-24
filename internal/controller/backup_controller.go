@@ -47,13 +47,13 @@ type BackupReconciler struct {
 func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	// 1) Получаем объект Backup
+	// 1) Get the Backup object
 	var bkp homev1.Backup
 	if err := r.Get(ctx, req.NamespacedName, &bkp); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// 2) Формируем желаемый CronJob
+	// 2) Form the desired CronJob
 	cron := &batchv1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      bkp.Name + "-cron",
@@ -83,15 +83,15 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		},
 	}
 
-	// 3) Устанавливаем владельца для автоматической уборки
+	// 3) Set the owner for automatic cleanup
 	if err := controllerutil.SetControllerReference(&bkp, cron, r.Scheme); err != nil {
 		logger.Error(err, "unable to set owner reference on CronJob")
 		return ctrl.Result{}, err
 	}
 
-	// 4) Создаём или обновляем CronJob в кластере
+	// 4) Create or update the CronJob in the cluster
 	if _, err := controllerutil.CreateOrUpdate(ctx, r.Client, cron, func() error {
-		// здесь можно добавить логику обновления spec, если нужно
+		// here you can add logic to update the spec if needed
 		return nil
 	}); err != nil {
 		logger.Error(err, "failed to create or update CronJob")
