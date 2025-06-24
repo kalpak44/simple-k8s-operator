@@ -55,7 +55,7 @@ var _ = Describe("Backup Controller", func() {
 		if err == nil {
 			_ = k8sClient.Delete(ctx, cron) // ignore error, as it may already be gone
 		}
-		// Note: In envtest, garbage collection of dependents is not always immediate or guaranteed.
+		// Note: In envtest and CI, garbage collection of dependents is not always immediate or guaranteed.
 		// So we do not fail the test if the CronJob still exists after deleting the Backup.
 	})
 
@@ -89,7 +89,7 @@ var _ = Describe("Backup Controller", func() {
 		))
 
 		// 3) OwnerReference points to Backup
-		Expect(len(cron.OwnerReferences)).To(Equal(1))
+		Expect(cron.OwnerReferences).To(HaveLen(1))
 		or := cron.OwnerReferences[0]
 		Expect(or.Kind).To(Equal("Backup"))
 		Expect(or.Name).To(Equal(backup.Name))
