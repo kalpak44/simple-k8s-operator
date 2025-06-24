@@ -3,7 +3,6 @@ run:
   allow-parallel-runners: true
 
 linters:
-  default: none
   enable:
     - dupl
     - errcheck
@@ -23,16 +22,3 @@ linters:
     - unused
     - gocognit
     - lll
-  settings:
-    revive:
-      rules:
-        - name: comment-spacings
-  exclusions:
-    rules:
-      - path: "api/*"
-        linters:
-          - lll
-      - path: "internal/*"
-        linters:
-          - dupl
-          - lll
